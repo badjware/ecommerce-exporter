@@ -201,3 +201,5 @@ tags
 # Persistent undo
 [._]*.un~
 
+### Project-specific
+dealwatch.yml

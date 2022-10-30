@@ -1,0 +1,5 @@
+targets:
+  amazon.ca:
+    url: https://www.amazon.ca/Intel-i7-12700K-Desktop-Processor-Unlocked/dp/B09FXNVDBJ/?_encoding=UTF8&pd_rd_w=BXQyU&content-id=amzn1.sym.b09e9731-f0de-43db-b62a-8954bcec282c&pf_rd_p=b09e9731-f0de-43db-b62a-8954bcec282c&pf_rd_r=Z2HRQ8TYGA943PQFTW1Q&pd_rd_wg=AG2TD&pd_rd_r=e4766451-3584-4c4f-8235-bcd4a316909a&ref_=pd_gw_ci_mcx_mr_hp_atf_m
+    selector: .a-offscreen
+    regex: '[0-9]+(\.[0-9]{2})?'
