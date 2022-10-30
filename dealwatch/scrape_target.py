@@ -1,15 +1,16 @@
-from email import parser
 import json
 import re
+
+from urllib.parse import urlparse
 
 import httpx
 import parsel
 import pyjq
 
 class ScrapeTarget:
-    def __init__(self, product_name, target_name, url, selector, regex=None, parser=None):
+    def __init__(self, product_name, url, selector, target_name=None, regex=None, parser=None):
         self.product_name = product_name
-        self.target_name = target_name
+        self.target_name = target_name if target_name else urlparse(url).hostname
         self.url = url
         self.selector = selector
         self.regex = re.compile(regex if regex else r'[0-9]+(\.[0-9]{2})?')

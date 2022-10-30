@@ -76,9 +76,9 @@ def parse_config(config_filename):
                 # Create a ScrapeTarget for each targets to scrape
                 result.append(ScrapeTarget(
                     product_name=product_name,
-                    target_name=get_field_or_die(target, 'name'),
                     url=get_field_or_die(target, 'url'),
                     selector=get_field_or_die(target, 'selector'),
+                    target_name=target.get('name'),
                     regex=target.get('regex'),
                     parser=target.get('parser'),
                 ))
