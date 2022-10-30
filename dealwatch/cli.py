@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import yaml
 
@@ -13,6 +14,12 @@ def main():
         help='The configuration file. (default: %(default)s)',
         type=str,
         default='dealwatch.yml',
+    )
+    parser.add_argument(
+        '-i', '--interval',
+        help='The target scrape interval, in minutes. (default: %(default)s)',
+        type=float,
+        default=10,
     )
     parser.add_argument(
         '--user-agent',
@@ -46,8 +53,11 @@ def main():
     # start the http server to server the prometheus metrics
     start_http_server(args.listen_port, args.listen_address)
 
-    for scrape_target in scrape_targets:
-        print(scrape_target.query_target())
+    # start the main loop
+    while True:
+        for scrape_target in scrape_targets:
+            print(scrape_target.query_target())
+        time.sleep(args.interval * 60)
 
 def parse_config(config_filename):
     result = []
@@ -70,6 +80,7 @@ def parse_config(config_filename):
                     url=get_field_or_die(target, 'url'),
                     selector=get_field_or_die(target, 'selector'),
                     regex=target.get('regex'),
+                    parser=target.get('parser'),
                 ))
     return result
 
