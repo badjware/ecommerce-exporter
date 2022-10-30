@@ -202,4 +202,4 @@ tags
 [._]*.un~
 
 ### Project-specific
-dealwatch.yml
+webscraping-exporter.yml

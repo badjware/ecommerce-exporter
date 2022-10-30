@@ -19,7 +19,7 @@ class ScrapeTarget:
 
     def query_target(self):
         print('Query product %s, target %s' % (self.product_name, self.target_name))
-        # some sites get suspicious if we talk to them in HTTP/1.1
+        # some sites get suspicious if we talk to them in HTTP/1.1 (maybe because it doesn't match our user-agent?)
         # we use httpx to have HTTP2 support and circumvent that issue
         query_response = httpx.get(
             url=self.url,

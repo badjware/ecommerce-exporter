@@ -1,11 +1,28 @@
 import argparse
+from itertools import product
 import time
 
 import yaml
 
-from prometheus_client import start_http_server
+from prometheus_client import start_http_server, Gauge, Counter
 
-from dealwatch.scrape_target import ScrapeTarget
+from webscraping_exporter.scrape_target import ScrapeTarget
+
+WEBSCRAPING_SCRAPE_TARGET_VALUE = Gauge(
+    'webscraping_scrape_target_value',
+    'The value scraped from a scrape target',
+    ['product_name', 'target_name'],
+)
+WEBSCRAPING_SCRAPE_TARGET_SUCCESS = Counter(
+    'webscraping_scrape_target_success_total',
+    'The number of successful scrape and parse of a scrape target',
+    ['product_name', 'target_name'],
+)
+WEBSCRAPING_SCRAPE_TARGET_FAILURE = Counter(
+    'webscraping_scrape_target_failure_total',
+    'The number of failed scrape and parse of a scrape target',
+    ['product_name', 'target_name'],
+)
 
 def main():
     parser = argparse.ArgumentParser("An utility to scrape e-commerce product price and expose them as prometheus metrics")
@@ -13,13 +30,13 @@ def main():
         '-c', '--config',
         help='The configuration file. (default: %(default)s)',
         type=str,
-        default='dealwatch.yml',
+        default='webscraping-exporter.yml',
     )
     parser.add_argument(
         '-i', '--interval',
         help='The target scrape interval, in minutes. (default: %(default)s)',
         type=float,
-        default=10,
+        default=15,
     )
     parser.add_argument(
         '--user-agent',
@@ -56,7 +73,12 @@ def main():
     # start the main loop
     while True:
         for scrape_target in scrape_targets:
-            print(scrape_target.query_target())
+            value = scrape_target.query_target()
+            if value is not None:
+                WEBSCRAPING_SCRAPE_TARGET_VALUE.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).set(value)
+                WEBSCRAPING_SCRAPE_TARGET_SUCCESS.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).inc()
+            else:
+                WEBSCRAPING_SCRAPE_TARGET_FAILURE.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).inc()
         time.sleep(args.interval * 60)
 
 def parse_config(config_filename):
