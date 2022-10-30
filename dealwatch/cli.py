@@ -2,20 +2,52 @@ import argparse
 
 import yaml
 
+from prometheus_client import start_http_server
+
 from dealwatch.scrape_target import ScrapeTarget
 
 def main():
-    parser = argparse.ArgumentParser("An utility to scrape e-commerce target price fluctuations")
+    parser = argparse.ArgumentParser("An utility to scrape e-commerce product price and expose them as prometheus metrics")
     parser.add_argument(
         '-c', '--config',
         help='The configuration file. (default: %(default)s)',
         type=str,
         default='dealwatch.yml',
     )
+    parser.add_argument(
+        '--user-agent',
+        help='The user-agent to spoof. (default: %(default)s)',
+        type=str,
+        default='Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
+    )
+    parser.add_argument(
+        '-p', '--listen-port',
+        help='The listen port for the http server. (default: %(default)s)',
+        type=int,
+        default=8000,
+    )
+    parser.add_argument(
+        '-a', '--listen-address',
+        help='The listen address for the http server. (default: %(default)s)',
+        type=str,
+        default='0.0.0.0',
+    )
 
     args = parser.parse_args()
-    products = parse_config(args.config)
-    print(products)
+    scrape_targets = parse_config(args.config)
+
+    # setup the headers for each scrape targets
+    for scrape_target in scrape_targets:
+        scrape_target.headers = {
+            'Accept': '*/*',
+            'User-Agent': args.user_agent,
+        }
+
+    # start the http server to server the prometheus metrics
+    start_http_server(args.listen_port, args.listen_address)
+
+    for scrape_target in scrape_targets:
+        print(scrape_target.query_target())
 
 def parse_config(config_filename):
     result = []
