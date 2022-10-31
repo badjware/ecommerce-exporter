@@ -7,20 +7,20 @@ import yaml
 from httpx import RequestError
 from prometheus_client import start_http_server, Gauge, Counter
 
-from webscraping_exporter.scrape_target import ScrapeError, ScrapeTarget
+from ecommerce_exporter.scrape_target import ScrapeError, ScrapeTarget
 
-WEBSCRAPING_SCRAPE_TARGET_VALUE = Gauge(
-    'webscraping_scrape_target_value',
+ECOMMERCE_SCRAPE_TARGET_VALUE = Gauge(
+    'ecommerce_scrape_target_value',
     'The value scraped from a scrape target',
     ['product_name', 'target_name'],
 )
-WEBSCRAPING_SCRAPE_TARGET_SUCCESS = Counter(
-    'webscraping_scrape_target_success_total',
+ECOMMERCE_SCRAPE_TARGET_SUCCESS = Counter(
+    'ecommerce_scrape_target_success_total',
     'The number of successful scrape and parse of a scrape target',
     ['product_name', 'target_name'],
 )
-WEBSCRAPING_SCRAPE_TARGET_FAILURE = Counter(
-    'webscraping_scrape_target_failure_total',
+ECOMMERCE_SCRAPE_TARGET_FAILURE = Counter(
+    'ecommerce_scrape_target_failure_total',
     'The number of failed scrape and parse of a scrape target',
     ['product_name', 'target_name', 'exception'],
 )
@@ -31,7 +31,7 @@ def main():
         '-c', '--config',
         help='The configuration file. (default: %(default)s)',
         type=str,
-        default='webscraping-exporter.yml',
+        default='ecommerce-exporter.yml',
     )
     parser.add_argument(
         '-i', '--interval',
@@ -77,17 +77,17 @@ def main():
             try:
                 print("Starting scrape. product: '%s', target '%s'" % (scrape_target.product_name, scrape_target.target_name))
                 value = scrape_target.query_target()
-                WEBSCRAPING_SCRAPE_TARGET_VALUE.labels(
+                ECOMMERCE_SCRAPE_TARGET_VALUE.labels(
                     product_name=scrape_target.product_name,
                     target_name=scrape_target.target_name
                 ).set(value)
-                WEBSCRAPING_SCRAPE_TARGET_SUCCESS.labels(
+                ECOMMERCE_SCRAPE_TARGET_SUCCESS.labels(
                     product_name=scrape_target.product_name,
                     target_name=scrape_target.target_name,
                 ).inc()
             except (RequestError, ScrapeError) as e:
                 print("Failed to scrape! product: '%s', target: '%s', message: '%s'" % (scrape_target.product_name, scrape_target.target_name, e))
-                WEBSCRAPING_SCRAPE_TARGET_FAILURE.labels(
+                ECOMMERCE_SCRAPE_TARGET_FAILURE.labels(
                     product_name=scrape_target.product_name,
                     target_name=scrape_target.target_name,
                     exception=e.__class__.__name__,
