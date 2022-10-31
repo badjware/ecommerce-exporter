@@ -1,0 +1,72 @@
+kind: pipeline
+type: kubernetes
+name: build-arm64
+
+node_selector:
+  kubernetes.io/arch: arm64
+
+steps:
+- name: docker build
+  image: plugins/docker
+  settings:
+    repo: ${DRONE_REPO}
+    tag: ${DRONE_COMMIT_SHA:0:8}-arm64
+    # docker use a mtu of 1500 by default, which may cause packet drop in k8s
+    mtu: 1450
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+---
+kind: pipeline
+type: kubernetes
+name: build-amd64
+
+node_selector:
+  kubernetes.io/arch: amd64
+
+steps:
+- name: docker build
+  image: plugins/docker
+  settings:
+    repo: ${DRONE_REPO}
+    tag: ${DRONE_COMMIT_SHA:0:8}-amd64
+    # docker use a mtu of 1500 by default, which may cause packet drop in k8s
+    mtu: 1450
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+---
+kind: pipeline
+type: kubernetes
+name: create-multiarch-manifest
+
+steps:
+  - name: docker manifest
+    image: docker:20-dind-rootless
+    commands:
+      - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+      - docker manifest create ${DRONE_REPO}:${DRONE_TAG:-latest} --amend ${DRONE_REPO}:${DRONE_COMMIT_SHA:0:8}-amd64 --amend ${DRONE_REPO}:${DRONE_COMMIT_SHA:0:8}-arm64
+      - docker manifest push ${DRONE_REPO}:${DRONE_TAG:-latest}
+    environment: 
+      DOCKER_USERNAME:
+        from_secret: docker_username
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+  - name: cleanup
+    image: alpine
+    commands:
+      - apk add curl jq
+      - 'DOCKER_TOKEN="$(curl -sf -XPOST -H "Content-Type: application/json" -d "{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}" https://hub.docker.com/v2/users/login | jq --raw-output .token)"'
+      - 'curl -sf -XDELETE -H "Accept: application/json" -H "Authorization: Bearer $DOCKER_TOKEN" https://hub.docker.com/v2/repositories/${DRONE_REPO}/tags/${DRONE_COMMIT_SHA:0:8}-arm64/'
+      - 'curl -sf -XDELETE -H "Accept: application/json" -H "Authorization: Bearer $DOCKER_TOKEN" https://hub.docker.com/v2/repositories/${DRONE_REPO}/tags/${DRONE_COMMIT_SHA:0:8}-amd64/'
+    environment: 
+      DOCKER_USERNAME:
+        from_secret: docker_username
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+
+depends_on:
+  - build-arm64
+  - build-amd64
