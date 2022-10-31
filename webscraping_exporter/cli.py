@@ -1,12 +1,13 @@
 import argparse
-from itertools import product
+import os
 import time
 
 import yaml
 
+from httpx import RequestError
 from prometheus_client import start_http_server, Gauge, Counter
 
-from webscraping_exporter.scrape_target import ScrapeTarget
+from webscraping_exporter.scrape_target import ScrapeError, ScrapeTarget
 
 WEBSCRAPING_SCRAPE_TARGET_VALUE = Gauge(
     'webscraping_scrape_target_value',
@@ -21,7 +22,7 @@ WEBSCRAPING_SCRAPE_TARGET_SUCCESS = Counter(
 WEBSCRAPING_SCRAPE_TARGET_FAILURE = Counter(
     'webscraping_scrape_target_failure_total',
     'The number of failed scrape and parse of a scrape target',
-    ['product_name', 'target_name'],
+    ['product_name', 'target_name', 'exception'],
 )
 
 def main():
@@ -58,7 +59,7 @@ def main():
     )
 
     args = parser.parse_args()
-    scrape_targets = parse_config(args.config)
+    scrape_targets = parse_config(os.path.abspath(args.config))
 
     # setup the headers for each scrape targets
     for scrape_target in scrape_targets:
@@ -73,12 +74,24 @@ def main():
     # start the main loop
     while True:
         for scrape_target in scrape_targets:
-            value = scrape_target.query_target()
-            if value is not None:
-                WEBSCRAPING_SCRAPE_TARGET_VALUE.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).set(value)
-                WEBSCRAPING_SCRAPE_TARGET_SUCCESS.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).inc()
-            else:
-                WEBSCRAPING_SCRAPE_TARGET_FAILURE.labels(product_name=scrape_target.product_name,target_name=scrape_target.target_name).inc()
+            try:
+                print("Starting scrape. product: '%s', target '%s'" % (scrape_target.product_name, scrape_target.target_name))
+                value = scrape_target.query_target()
+                WEBSCRAPING_SCRAPE_TARGET_VALUE.labels(
+                    product_name=scrape_target.product_name,
+                    target_name=scrape_target.target_name
+                ).set(value)
+                WEBSCRAPING_SCRAPE_TARGET_SUCCESS.labels(
+                    product_name=scrape_target.product_name,
+                    target_name=scrape_target.target_name,
+                ).inc()
+            except (RequestError, ScrapeError) as e:
+                print("Failed to scrape! product: '%s', target: '%s', message: '%s'" % (scrape_target.product_name, scrape_target.target_name, e))
+                WEBSCRAPING_SCRAPE_TARGET_FAILURE.labels(
+                    product_name=scrape_target.product_name,
+                    target_name=scrape_target.target_name,
+                    exception=e.__class__.__name__,
+                ).inc()
         time.sleep(args.interval * 60)
 
 def parse_config(config_filename):

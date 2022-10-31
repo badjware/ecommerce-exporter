@@ -17,8 +17,12 @@ class ScrapeTarget:
         self.parser = parser if parser else 'html'
         self.headers = {}
 
+        # sanity check
+        valid_parsers = ('html', 'json')
+        if self.parser not in valid_parsers:
+            raise ValueError("Invalid parser configured (got '%s' but need one of %s) product: '%s', target: '%s'" % (self.parser, valid_parsers, self.product_name, self.target_name))
+
     def query_target(self):
-        print('Query product %s, target %s' % (self.product_name, self.target_name))
         # some sites get suspicious if we talk to them in HTTP/1.1 (maybe because it doesn't match our user-agent?)
         # we use httpx to have HTTP2 support and circumvent that issue
         query_response = httpx.get(
@@ -38,14 +42,10 @@ class ScrapeTarget:
             query_response_json = json.loads(query_response)
             selector_match = str(pyjq.first(self.selector, query_response_json))
         else:
-            # TODO: better error handling
-            print('invalid parser!')
-            return None
+            raise ScrapeError('Invalid parser!')
 
         if not selector_match:
-            # TODO: better error handling
-            print('no selector_match!')
-            return None
+            raise ScrapeError('Failed to match selector!')
 
         # match the regex
         regex_match = self.regex.search(selector_match)
@@ -55,6 +55,8 @@ class ScrapeTarget:
             float_result = float(str_result)
             return float_result
         else:
-            # TODO: better error handling
-            print('no regex match!')
-            return None
+            raise ScrapeError('Failed to match regex!')
+
+class ScrapeError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
