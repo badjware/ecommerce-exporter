@@ -76,8 +76,6 @@ type: kubernetes
 name: publish-pypi
 
 trigger:
-  branch:
-    - master
   event:
     - tag
 
