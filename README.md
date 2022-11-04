@@ -1,6 +1,6 @@
 # ecommerce-exporter
 
-ecommerce-exporter is a [prometheus](https://prometheus.io/) exporter that webscrape the storefront of various ecommerces and expose the price of their products as prometheus metrics. These metrics can then be used to graph the pricing evolution over time, send alerts when the price drop, or to easily compare the price of a product on many ecommerces at once.
+ecommerce-exporter is a [prometheus](https://prometheus.io/) exporter that webscrape the storefront of various e-commerces and expose the price of their products as prometheus metrics. These metrics can then be used to graph the pricing evolution over time, send alerts when the price drop, or to easily compare the price of a product on many e-commerces at once.
 
 ## Install
 
@@ -13,14 +13,14 @@ This is the recommended way of running the exporter.
 
 ## Usage
 
-Download the [example configuration file](ecommerce-exporter.example.yml) and edit it to configure the ecommerce sites you wish to scrape. You can configure multiple products and multiple targets in the same configuration file.
+Download the [example configuration file](ecommerce-exporter.example.yml) and edit it to configure the e-commerce sites you wish to scrape. You can configure multiple products and multiple targets in the same configuration file.
 
 Assuming you named your configuration file `ecommerce-exporter.yml`, you can use the following command to run the exporter with docker:
 ``` sh
 docker run -v "$PWD/ecommerce-exporter.yml:/ecommerce-exporter.yml" -p 8000:8000 badjware/ecommerce-exporter
 ```
 
-The prices of the configured products will start being scraped and exposed on http://localhost:8000/metrics. You can then configure [prometheus](https://prometheus.io/) to scrape that endpoint. It is recommended to set the scrape interval to be the same as the webscrape interval of the exporter (15m by default). 
+The prices of the configured products will start being scraped and exposed on http://localhost:8000/metrics. You can then configure [prometheus to scrape that endpoint](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config). It is recommended to set the scrape interval to be the same as the webscrape interval of the exporter (15m by default). 
 
 A full list of available flags can be printed using `-h`:
 ```
@@ -63,7 +63,7 @@ Below is a table with examples of some CSS selectors that match the html element
 
 | site | selector |
 | --- | --- |
-| amazon.ca | `.a-offscreen::text` |
+| amazon.ca | `.priceToPay .a-offscreen::text` |
 | canadacomputer.com | `.price-show-panel .h2-big strong::text` |
 | memoryexpress.com | `.GrandTotal` |
 
