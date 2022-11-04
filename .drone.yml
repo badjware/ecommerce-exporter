@@ -70,3 +70,22 @@ steps:
 depends_on:
   - build-arm64
   - build-amd64
+---
+kind: pipeline
+type: kubernetes
+name: publish-pypi
+
+trigger:
+  branch:
+    - master
+  event:
+    - tag
+
+steps:
+- name: publish pypi
+  image: plugins/pypi
+  settings:
+    username:
+        from_secret: pypi_username
+    password:
+        from_secret: pypi_username
