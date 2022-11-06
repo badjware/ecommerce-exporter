@@ -80,14 +80,10 @@ trigger:
     - tag
 
 steps:
-  - name: publish pypi
-    image: python:3.10
-    commands:
-      - pip install twine
-      - python setup.py sdist
-      - twine upload dist/*
-    environment:
-      TWINE_USERNAME:
+- name: publish pypi
+  image: plugins/pypi
+  settings:
+    username:
         from_secret: pypi_username
-      TWINE_PASSWORD:
-        from_secret: pypi_username
+    password:
+        from_secret: pypi_password
