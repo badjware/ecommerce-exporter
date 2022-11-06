@@ -4,12 +4,21 @@ ecommerce-exporter is a [prometheus](https://prometheus.io/) exporter that websc
 
 ## Install
 
+### Using docker
+
 An aarch64 and an amd64 docker images are available on [docker hub](https://hub.docker.com/r/badjware/ecommerce-exporter). You can pull it using:
 ``` sh
 docker pull badjware/ecommerce-exporter
 ```
 
 This is the recommended way of running the exporter. 
+
+### Using pip
+
+Alternatively, if you prefer to avoid having to use docker, you can install ecommerce-exporter as a standard python package.
+``` sh
+pip install ecommerce-exporter
+```
 
 ## Usage
 
@@ -49,7 +58,7 @@ options:
 
 Finding the correct value for a selector will require some effort. Once you find the correct selector to use, you should be able to use the same one across the whole site.
 
-## html parser
+### html parser
 
 The general procedure to figure out the selector for a site using an html parser is as follow:
 1. Open up the product page in your browser.
@@ -67,7 +76,7 @@ Below is a table with examples of some CSS selectors that match the html element
 | canadacomputer.com | `.price-show-panel .h2-big strong::text` |
 | memoryexpress.com | `.GrandTotal` |
 
-## json parser
+### json parser
 
 The general procedure to figure out the selector for a site using an json parser is as follow:
 1. Open up the development tool of your browser using the F12 key.
@@ -84,3 +93,20 @@ Below is a table with examples of some jq selectors that match the json field co
 | --- | --- | --- |
 | newegg.ca | `.MainItem.UnitCost` | https://www.newegg.ca/product/api/ProductRealtime?ItemNumber=19-118-343&RecommendItem=&BestSellerItemList=9SIAA4YGC82324%2C9SIADGEGMY7603%2C9SIAVH1J0A6685&IsVATPrice=true |
 | bestbuy.ca | `.[] \| .salePrice,.regularPrice` | https://www.bestbuy.ca/api/offers/v1/products/15778672/offers |
+
+## Developing
+
+Setup a virtualenv and activate it:
+``` sh
+python -m venv env
+source env/bin/activate
+```
+
+Setup the project as an editable install:
+``` sh
+pip install -e .
+```
+
+You can now run the exporter using `ecommerce-exporter` while your virtualenv is active.
+
+Happy hacking!
