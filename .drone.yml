@@ -80,10 +80,14 @@ trigger:
     - tag
 
 steps:
-- name: publish pypi
-  image: plugins/pypi
-  settings:
-    username:
-        from_secret: pypi_username
-    password:
-        from_secret: pypi_password
+  - name: fetch tags
+    image: alpine/git
+    commands:
+      - git fetch --tags
+  - name: publish pypi
+    image: plugins/pypi
+    settings:
+      username:
+          from_secret: pypi_username
+      password:
+          from_secret: pypi_password
